@@ -8,16 +8,18 @@ function bail
 	exit 1
 }
 
-DSTROOT="`     xcodebuild -showBuildSettings | perl -n -e'/^    DSTROOT = (.+)/      && print $1'`"
-PRODUCT_NAME="`xcodebuild -showBuildSettings | perl -n -e'/^    PRODUCT_NAME = (.+)/ && print $1'`"
-INSTALL_DIR="` xcodebuild -showBuildSettings | perl -n -e'/^    INSTALL_DIR = (.+)/  && print $1'`"
-INSTALL_PATH="`xcodebuild -showBuildSettings | perl -n -e'/^    INSTALL_PATH = (.+)/ && print $1'`"
+PROJECT=./export-apple-certs.xcodeproj
+CONFIGURATION=Release
+DSTROOT="`     xcodebuild -project $PROJECT -configuration $CONFIGURATION -showBuildSettings | perl -n -e'/^    DSTROOT = (.+)/      && print $1'`"
+PRODUCT_NAME="`xcodebuild -project $PROJECT -configuration $CONFIGURATION -showBuildSettings | perl -n -e'/^    PRODUCT_NAME = (.+)/ && print $1'`"
+INSTALL_DIR="` xcodebuild -project $PROJECT -configuration $CONFIGURATION -showBuildSettings | perl -n -e'/^    INSTALL_DIR = (.+)/  && print $1'`"
+INSTALL_PATH="`xcodebuild -project $PROJECT -configuration $CONFIGURATION -showBuildSettings | perl -n -e'/^    INSTALL_PATH = (.+)/ && print $1'`"
 SRC_BIN_PATH="$INSTALL_DIR/$PRODUCT_NAME"
 DST_BIN_PATH="$INSTALL_PATH/$PRODUCT_NAME"
 
-sudo xcodebuild clean || bail "Could not clean project"
+sudo xcodebuild -project $PROJECT -configuration $CONFIGURATION clean || bail "Could not clean project"
 sudo rm -rf "$DSTROOT"
-sudo xcodebuild install || bail "Could not install project"
+sudo xcodebuild -project $PROJECT -configuration $CONFIGURATION install || bail "Could not install project"
 
 #echo "Copying $PRODUCT_NAME to $INSTALL_PATH ..."
 #
@@ -27,6 +29,6 @@ sudo xcodebuild install || bail "Could not install project"
 #echo INSTALL_PATH = $INSTALL_PATH
 
 sudo rm -f "$DST_BIN_PATH"
-echo ditto "$SRC_BIN_PATH" "$DST_BIN_PATH"
 sudo ditto "$SRC_BIN_PATH" "$DST_BIN_PATH" || bail "Could not copy $SRC_BIN_PATH to $DST_BIN_PATH"
 
+echo "Tool successfully installed to $DST_BIN_PATH"
