@@ -26,6 +26,7 @@
 		6A5094871D21879100C61492 /* export-apple-certs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "export-apple-certs"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6A50948A1D21879100C61492 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		6A5094911D2187C900C61492 /* export-apple-certs-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "export-apple-certs-Bridging-Header.h"; sourceTree = "<group>"; };
+		6A5094961D2AB8C700C61492 /* install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = install.sh; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,6 +43,7 @@
 		6A50947E1D21879100C61492 = {
 			isa = PBXGroup;
 			children = (
+				6A5094961D2AB8C700C61492 /* install.sh */,
 				6A5094891D21879100C61492 /* export-apple-certs */,
 				6A5094881D21879100C61492 /* Products */,
 			);
@@ -214,6 +216,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				INSTALL_GROUP = admin;
+				INSTALL_OWNER = root;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "export-apple-certs/export-apple-certs-Bridging-Header.h";
@@ -225,6 +229,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				INSTALL_GROUP = admin;
+				INSTALL_OWNER = root;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "export-apple-certs/export-apple-certs-Bridging-Header.h";
