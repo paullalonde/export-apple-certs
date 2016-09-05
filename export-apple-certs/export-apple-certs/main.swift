@@ -29,10 +29,10 @@ private func main()
 		
 		let keychain = try Keychain(path: keychain_name);
 		let identities = try keychain.SearchIdentities(maxResults: nil)
-		let filteredIdentities = try identities.filter { try filter_identity($0) }
-		let exportedData = try export_identities(filteredIdentities)
+		let filteredIdentities = try identities.filter { try filter_identity(identity: $0) }
+		let exportedData = try export_identities(identities: filteredIdentities)
 		
-		try write_export_file(output_path, data: exportedData)
+		try write_export_file(path: output_path, data: exportedData)
 		
 		good = true
 	}
@@ -51,7 +51,7 @@ private func main()
 	if !good { exit(1) }
 }
 
-private func filter_identity(_ identity: KeychainIdentity) throws -> Bool
+private func filter_identity(identity: KeychainIdentity) throws -> Bool
 {
 	if let certificate = try? identity.getCertificate()
 	{
@@ -91,7 +91,7 @@ private func filter_identity(_ identity: KeychainIdentity) throws -> Bool
 }
 
 
-private func export_identities(_ identities: [KeychainIdentity]) throws -> Data
+private func export_identities(identities: [KeychainIdentity]) throws -> Data
 {
 	for identity in identities
 	{
@@ -101,10 +101,10 @@ private func export_identities(_ identities: [KeychainIdentity]) throws -> Data
 		print("Exporting certificate : \(summary)")
 	}
 	
-	return try export_identities(identities.map { $0.Ref })
+	return try export_identities(identities: identities.map { $0.Ref })
 }
 
-private func export_identities(_ identities: [SecIdentity]) throws -> Data
+private func export_identities(identities: [SecIdentity]) throws -> Data
 {
 	let identitiesArray = identities as NSArray
 	let exportFlags = SecItemImportExportFlags.pemArmour
@@ -129,7 +129,7 @@ private func export_identities(_ identities: [SecIdentity]) throws -> Data
 	return data as Data;
 }
 
-func write_export_file(_ path: String, data: Data) throws
+func write_export_file(path: String, data: Data) throws
 {
 	try data.write(to: URL(fileURLWithPath: path), options: .atomic)
 }

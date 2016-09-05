@@ -13,7 +13,7 @@ struct KeychainKey
 {
 	fileprivate let _key: SecKey
 	
-	init(_ key: SecKey)
+	init(key: SecKey)
 	{
 		_key = key;
 	}

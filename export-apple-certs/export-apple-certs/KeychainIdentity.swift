@@ -13,7 +13,7 @@ struct KeychainIdentity
 {
 	fileprivate let _identity: SecIdentity
 	
-	init(_ identity: SecIdentity)
+	init(identity: SecIdentity)
 	{
 		_identity = identity;
 	}
@@ -33,7 +33,7 @@ struct KeychainIdentity
 			throw make_sec_error(err, "Cannot retrieve identity's certificate")
 		}
 		
-		return KeychainCertificate(certificate!)
+		return KeychainCertificate(certificate: certificate!)
 	}
 	
 	// note: this should be a computed property, but they can't throw (yet)
@@ -46,6 +46,6 @@ struct KeychainIdentity
 			throw make_sec_error(err, "Cannot retrieve identity's private key")
 		}
 		
-		return KeychainKey(privateKey!)
+		return KeychainKey(key: privateKey!)
 	}
 }

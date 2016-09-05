@@ -13,7 +13,7 @@ struct KeychainCertificate
 {
 	fileprivate let _certificate: SecCertificate
 	
-	init(_ certificate: SecCertificate)
+	init(certificate: SecCertificate)
 	{
 		_certificate = certificate;
 	}
@@ -28,7 +28,7 @@ struct KeychainCertificate
 	// note: this should be a computed property, but they can't throw (yet)
 	func getSubjectName() throws -> KeychainCertificateSubjectName?
 	{
-		if let property = try ReadProperty(kSecOIDX509V1SubjectName)
+		if let property = try ReadProperty(key: kSecOIDX509V1SubjectName)
 		{
 			return KeychainCertificateSubjectName(property: property)
 		}
@@ -36,7 +36,7 @@ struct KeychainCertificate
 		return nil
 	}
 	
-	fileprivate func ReadProperty(_ key: CFString) throws -> KeychainCertificateProperty?
+	fileprivate func ReadProperty(key: CFString) throws -> KeychainCertificateProperty?
 	{
 		let keys: [CFString] = [ key ]
 		var unmanagedErrorOpt: Unmanaged<CFError>?
@@ -91,7 +91,7 @@ struct KeychainCertificateSubjectName
 	{
 		get
 		{
-			return FindString(kSecOIDOrganizationName)
+			return FindString(label: kSecOIDOrganizationName)
 		}
 	}
 	
@@ -99,13 +99,13 @@ struct KeychainCertificateSubjectName
 	{
 		get
 		{
-			return FindString(kSecOIDOrganizationalUnitName)
+			return FindString(label: kSecOIDOrganizationalUnitName)
 		}
 	}
 	
-	fileprivate func FindString(_ label: CFString) -> String?
+	fileprivate func FindString(label: CFString) -> String?
 	{
-		if let property = Find(label)
+		if let property = Find(label: label)
 		{
 			if let value = property.Value as? String
 			{
@@ -116,7 +116,7 @@ struct KeychainCertificateSubjectName
 		return nil
 	}
 	
-	fileprivate func Find(_ label: CFString) -> KeychainCertificateProperty?
+	fileprivate func Find(label: CFString) -> KeychainCertificateProperty?
 	{
 		let labelString = label as String
 		let foundIndexOpt = _properties.index { $0.Label == labelString }

@@ -44,7 +44,7 @@ struct Keychain
 	
 	func SearchIdentities(maxResults: UInt? = 1) throws -> [KeychainIdentity]
 	{
-		let results = try Search(self, searchClass: .identity, maxResults: maxResults)
+		let results = try Search(keychain: self, searchClass: .identity, maxResults: maxResults)
 		
 		return try results.map {
 			switch ($0)
@@ -59,7 +59,7 @@ struct Keychain
 	
 	func SearchCertificates(maxResults: UInt? = 1) throws -> [KeychainCertificate]
 	{
-		let results = try Search(self, searchClass: .certificate, maxResults: maxResults)
+		let results = try Search(keychain: self, searchClass: .certificate, maxResults: maxResults)
 		
 		return try results.map {
 			switch ($0)
@@ -74,7 +74,7 @@ struct Keychain
 	
 	func SearchKeys(maxResults: UInt? = 1) throws -> [KeychainKey]
 	{
-		let results = try Search(self, searchClass: .key, maxResults: maxResults)
+		let results = try Search(keychain: self, searchClass: .key, maxResults: maxResults)
 		
 		return try results.map {
 			switch ($0)
@@ -87,7 +87,7 @@ struct Keychain
 		}
 	}
 	
-	fileprivate func Search(_ keychain: Keychain?, searchClass: KeychainSearchClass?, maxResults: UInt?) throws -> [KeychainSearchResult]
+	fileprivate func Search(keychain: Keychain?, searchClass: KeychainSearchClass?, maxResults: UInt?) throws -> [KeychainSearchResult]
 	{
 		var query: [String: AnyObject] = [
 			kSecReturnRef as String: kCFBooleanTrue,
@@ -163,11 +163,11 @@ struct Keychain
 				switch (foundItemType)
 				{
 				case SecCertificateGetTypeID():
-					value = KeychainSearchResult.certificate(KeychainCertificate(foundItem as! SecCertificate))
+					value = KeychainSearchResult.certificate(KeychainCertificate(certificate: foundItem as! SecCertificate))
 				case SecKeyGetTypeID():
-					value = KeychainSearchResult.key(KeychainKey(foundItem as! SecKey))
+					value = KeychainSearchResult.key(KeychainKey(key: foundItem as! SecKey))
 				case SecIdentityGetTypeID():
-					value = KeychainSearchResult.identity(KeychainIdentity(foundItem as! SecIdentity))
+					value = KeychainSearchResult.identity(KeychainIdentity(identity: foundItem as! SecIdentity))
 				default:
 					throw ExportError.unsupportedKeychainItemType
 				}
