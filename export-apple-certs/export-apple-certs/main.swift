@@ -27,9 +27,10 @@ private func main()
 	{
 		parse_args()
 		
-		let keychain = try open_keychain(keychain_name)
-		let identities = try read_identities(keychain)
-		let exportedData = try export_identities(identities)
+		let keychain = try Keychain(path: keychain_name);
+		let identities = try keychain.SearchIdentities(maxResults: nil)
+		let filteredIdentities = try identities.filter { try filter_identity($0) }
+		let exportedData = try export_identities(filteredIdentities)
 		
 		try write_export_file(output_path, data: exportedData)
 		
@@ -50,133 +51,57 @@ private func main()
 	if !good { exit(1) }
 }
 
-private func read_identities(keychain: SecKeychain) throws -> [SecIdentity]
+private func filter_identity(identity: KeychainIdentity) throws -> Bool
 {
-	var filteredIdentities = [SecIdentity]()
-	let keychainFilter = [keychain] as NSArray;
-	
-	let query: [String: AnyObject] = [
-		kSecClass as String: kSecClassIdentity,
-		kSecMatchLimit as String: kSecMatchLimitAll,
-		kSecMatchSearchList as String: keychainFilter,
-		//kSecReturnAttributes as String: kCFBooleanTrue,
-		kSecReturnRef as String: kCFBooleanTrue,
-		kSecReturnData as String: kCFBooleanTrue,
-		]
-	
-	let foundIdentities = try query_keychain_items(query)
-	
-	for foundIdentityAny in foundIdentities
+	if let certificate = try? identity.getCertificate()
 	{
-		let foundIdentityNS = foundIdentityAny as! NSDictionary
-		let foundIdentity = foundIdentityNS as! [String: AnyObject]
-		
-		if let identity = read_identity(foundIdentity) {
-			filteredIdentities.append(identity)
-		}
-	}
-	
-	return filteredIdentities
-}
-
-private func read_identity(foundIdentity: [String: AnyObject?]) -> SecIdentity?
-{
-	let identity = foundIdentity[kSecValueRef as String] as! SecIdentity;
-	
-	if let certificate = try? read_certificate(identity)
-	{
-		if let privateKey = try? read_private_key(identity)
+		if (try? identity.getKey()) != nil
 		{
-			let certValueKeys: [CFString] = [
-				//kSecOIDCommonName,
-				//kSecOIDX509V1IssuerName,
-				kSecOIDX509V1SubjectName,
-			]
-			
-			// NB: If we get an error while reading the cert values, just skip this cert.
-			
-			if let certValues = try? read_certificate_values(certificate, keys: certValueKeys)
+			if let subjectName = try certificate.getSubjectName()
 			{
-				var goodSubjectName = true
+				var goodOrganization = true
+				var goodOrganizationalUnit = true
 				
-				if let subjectName = read_sec_dict_key(certValues, key: kSecOIDX509V1SubjectName)
-				{
-					goodSubjectName = false
-					
-					if filter_subject_name(subjectName)
-					{
-						goodSubjectName = true
-					}
-				}
-				
-				if goodSubjectName
-				{
-					let summary = SecCertificateCopySubjectSummary(certificate) as String
-					
-					print("Exporting certificate : \(summary)")
-					
-					return identity
-				}
-			}
-		}
-	}
-	
-	return nil
-}
-
-private func filter_subject_name(subject: [String: AnyObject]) -> Bool
-{
-	let kOrganizationCase = kSecOIDOrganizationName as String
-	let kOrganizationalUnitCase = kSecOIDOrganizationalUnitName as String
-	var goodOrganization = false
-	var goodOrganizationalUnit = false
-	
-	if username.isEmpty { goodOrganization = true }
-	if teamid.isEmpty { goodOrganizationalUnit = true }
-	
-	if let subjectValueAny = subject[kSecPropertyKeyValue as String]
-	{
-		let subjectValueArrayNS = subjectValueAny as! NSArray
-		let subjectValueArray = subjectValueArrayNS as! [NSDictionary]
-		
-		for subjectItemNS in subjectValueArray
-		{
-			let subjectItem = subjectItemNS as! [String: AnyObject]
-			let itemLabel = subjectItem[kSecPropertyKeyLabel as String] as! String
-			
-			switch itemLabel
-			{
-			case kOrganizationCase:
 				if !username.isEmpty
 				{
-					let organization = subjectItem[kSecPropertyKeyValue as String] as! String
+					goodOrganization = false
 					
-					if organization == username
+					if let organization = subjectName.OrganizationName
 					{
-						goodOrganization = true
+						goodOrganization = (organization == username)
 					}
 				}
-				break
 				
-			case kOrganizationalUnitCase:
 				if !teamid.isEmpty
 				{
-					let orgUnit = subjectItem[kSecPropertyKeyValue as String] as! String
+					goodOrganizationalUnit = false
 					
-					if orgUnit == teamid
+					if let organizationalUnit = subjectName.OrganizationalUnitName
 					{
-						goodOrganizationalUnit = true
+						goodOrganizationalUnit = (organizationalUnit == teamid)
 					}
 				}
 				
-			default:
-				// There's nothing to do
-				break
+				return goodOrganization && goodOrganizationalUnit
 			}
 		}
 	}
 	
-	return goodOrganization && goodOrganizationalUnit
+	return false
+}
+
+
+private func export_identities(identities: [KeychainIdentity]) throws -> NSData
+{
+	for identity in identities
+	{
+		let certificate = try identity.getCertificate()
+		let summary = certificate.SubjectSummary
+		
+		print("Exporting certificate : \(summary)")
+	}
+	
+	return try export_identities(identities.map { $0.Ref })
 }
 
 private func export_identities(identities: [SecIdentity]) throws -> NSData
@@ -202,99 +127,6 @@ private func export_identities(identities: [SecIdentity]) throws -> NSData
 	let data = dataOpt!
 	
 	return data as NSData;
-}
-
-private func open_keychain(path: String) throws -> SecKeychain
-{
-	var keychain: SecKeychainRef?
-	let err = withUnsafeMutablePointer(&keychain) { SecKeychainOpen(path, UnsafeMutablePointer($0)) }
-	
-	if err != errSecSuccess {
-		throw make_sec_error(err, "Cannot open keychain '\(path)'")
-	}
-	
-	return keychain!
-}
-
-private func query_keychain_items(query: [String: AnyObject]) throws -> [AnyObject]
-{
-	var foundIdentitiesAny: AnyObject?
-	let err = withUnsafeMutablePointer(&foundIdentitiesAny) { SecItemCopyMatching(query, UnsafeMutablePointer($0)) }
-	
-	if err != errSecSuccess {
-		throw make_sec_error(err, "Cannot query keychain items")
-	}
-	
-	if let foundIdentities = foundIdentitiesAny as! [AnyObject]? {
-		return foundIdentities
-	} else {
-		return []
-	}
-}
-
-private func read_certificate(identity: SecIdentity) throws -> SecCertificate
-{
-	var certificate: SecCertificate?
-	let err = withUnsafeMutablePointer(&certificate) { SecIdentityCopyCertificate(identity, UnsafeMutablePointer($0)) }
-	
-	if err != errSecSuccess {
-		throw make_sec_error(err, "Cannot retrieve identity's certificate")
-	}
-	
-	return certificate!
-}
-
-private func read_private_key(identity: SecIdentity) throws -> SecKey
-{
-	var privateKey: SecKey?
-	let err = withUnsafeMutablePointer(&privateKey) { SecIdentityCopyPrivateKey(identity, UnsafeMutablePointer($0)) }
-	
-	if err != errSecSuccess {
-		throw make_sec_error(err, "Cannot retrieve identity's private key")
-	}
-	
-	return privateKey!
-}
-
-private func read_certificate_values(certificate: SecCertificate, keys: [CFString]) throws -> [String: AnyObject]
-{
-	var unmanagedErrorOpt: Unmanaged<CFError>?
-	let certValuesAnyOpt = withUnsafeMutablePointer(&unmanagedErrorOpt) { SecCertificateCopyValues(certificate, keys, UnsafeMutablePointer($0)) }
-	
-	if let unmanagedError = unmanagedErrorOpt
-	{
-		let cfError : CFError = unmanagedError.takeRetainedValue()
-		
-		throw make_error(cfError)
-	}
-	
-	if let certValuesAny = certValuesAnyOpt
-	{
-		let certValuesNS = certValuesAny as NSDictionary
-		let certValues = certValuesNS as! [String: AnyObject]
-		
-		return certValues;
-	}
-	
-	return [:]
-}
-
-private func read_sec_dict_key(dict: [String: AnyObject], key: CFString) -> [String: AnyObject]?
-{
-	let valueAnyOpt = dict[key as String]
-	
-	if let valueAny = valueAnyOpt
-	{
-		if let valueNS = valueAny as? NSDictionary
-		{
-			if let value = valueNS as? [String: AnyObject]
-			{
-				return value
-			}
-		}
-	}
-	
-	return nil
 }
 
 func write_export_file(path: String, data: NSData) throws
@@ -328,6 +160,11 @@ func make_error(err: CFError) -> NSError
 	let error = NSError(domain: domain as String, code: code, userInfo: userInfo)
 	
 	return error
+}
+
+enum ExportError : ErrorType
+{
+	case UnsupportedKeychainItemType
 }
 
 private func parse_args()

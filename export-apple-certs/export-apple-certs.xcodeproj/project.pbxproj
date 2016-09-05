@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6A3B724D1D7C952200F11423 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3B724C1D7C952200F11423 /* Keychain.swift */; };
+		6A3B72511D7C9D9E00F11423 /* KeychainIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3B72501D7C9D9E00F11423 /* KeychainIdentity.swift */; };
+		6A3B72551D7D10EE00F11423 /* KeychainCertificate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3B72541D7D10EE00F11423 /* KeychainCertificate.swift */; };
+		6A3B72571D7D130000F11423 /* KeychainKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3B72561D7D130000F11423 /* KeychainKey.swift */; };
 		6A50948B1D21879100C61492 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A50948A1D21879100C61492 /* main.swift */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +27,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		6A3B724C1D7C952200F11423 /* Keychain.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
+		6A3B72501D7C9D9E00F11423 /* KeychainIdentity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeychainIdentity.swift; sourceTree = "<group>"; };
+		6A3B72541D7D10EE00F11423 /* KeychainCertificate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeychainCertificate.swift; sourceTree = "<group>"; };
+		6A3B72561D7D130000F11423 /* KeychainKey.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeychainKey.swift; sourceTree = "<group>"; };
 		6A5094871D21879100C61492 /* export-apple-certs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "export-apple-certs"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6A50948A1D21879100C61492 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		6A5094911D2187C900C61492 /* export-apple-certs-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "export-apple-certs-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -62,6 +70,10 @@
 			children = (
 				6A50948A1D21879100C61492 /* main.swift */,
 				6A5094911D2187C900C61492 /* export-apple-certs-Bridging-Header.h */,
+				6A3B724C1D7C952200F11423 /* Keychain.swift */,
+				6A3B72501D7C9D9E00F11423 /* KeychainIdentity.swift */,
+				6A3B72541D7D10EE00F11423 /* KeychainCertificate.swift */,
+				6A3B72561D7D130000F11423 /* KeychainKey.swift */,
 			);
 			path = "export-apple-certs";
 			sourceTree = "<group>";
@@ -123,7 +135,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6A3B72551D7D10EE00F11423 /* KeychainCertificate.swift in Sources */,
 				6A50948B1D21879100C61492 /* main.swift in Sources */,
+				6A3B724D1D7C952200F11423 /* Keychain.swift in Sources */,
+				6A3B72511D7C9D9E00F11423 /* KeychainIdentity.swift in Sources */,
+				6A3B72571D7D130000F11423 /* KeychainKey.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -256,6 +272,7 @@
 				6A5094901D21879100C61492 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
