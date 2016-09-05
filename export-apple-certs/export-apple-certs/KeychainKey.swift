@@ -11,7 +11,7 @@ import Foundation
 
 struct KeychainKey
 {
-	private let _key: SecKey
+	fileprivate let _key: SecKey
 	
 	init(_ key: SecKey)
 	{

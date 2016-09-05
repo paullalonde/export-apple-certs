@@ -11,7 +11,7 @@ import Foundation
 
 struct KeychainCertificate
 {
-	private let _certificate: SecCertificate
+	fileprivate let _certificate: SecCertificate
 	
 	init(_ certificate: SecCertificate)
 	{
@@ -36,11 +36,11 @@ struct KeychainCertificate
 		return nil
 	}
 	
-	private func ReadProperty(key: CFString) throws -> KeychainCertificateProperty?
+	fileprivate func ReadProperty(_ key: CFString) throws -> KeychainCertificateProperty?
 	{
 		let keys: [CFString] = [ key ]
 		var unmanagedErrorOpt: Unmanaged<CFError>?
-		let certValuesAnyOpt = withUnsafeMutablePointer(&unmanagedErrorOpt) { SecCertificateCopyValues(_certificate, keys, UnsafeMutablePointer($0)) }
+		let certValuesAnyOpt = withUnsafeMutablePointer(to: &unmanagedErrorOpt) { SecCertificateCopyValues(_certificate, keys as CFArray?, UnsafeMutablePointer($0)) }
 		
 		if let unmanagedError = unmanagedErrorOpt
 		{
@@ -73,7 +73,7 @@ struct KeychainCertificate
 
 struct KeychainCertificateSubjectName
 {
-	private let _properties: [KeychainCertificateProperty]
+	fileprivate let _properties: [KeychainCertificateProperty]
 	
 	init(property: KeychainCertificateProperty)
 	{
@@ -103,7 +103,7 @@ struct KeychainCertificateSubjectName
 		}
 	}
 	
-	private func FindString(label: CFString) -> String?
+	fileprivate func FindString(_ label: CFString) -> String?
 	{
 		if let property = Find(label)
 		{
@@ -116,10 +116,10 @@ struct KeychainCertificateSubjectName
 		return nil
 	}
 	
-	private func Find(label: CFString) -> KeychainCertificateProperty?
+	fileprivate func Find(_ label: CFString) -> KeychainCertificateProperty?
 	{
 		let labelString = label as String
-		let foundIndexOpt = _properties.indexOf { $0.Label == labelString }
+		let foundIndexOpt = _properties.index { $0.Label == labelString }
 		
 		if let foundIndex = foundIndexOpt
 		{
@@ -132,7 +132,7 @@ struct KeychainCertificateSubjectName
 
 struct KeychainCertificateProperty
 {
-	private let _entry: [String: AnyObject]
+	fileprivate let _entry: [String: AnyObject]
 	
 	init(entry: [String: AnyObject])
 	{

@@ -38,20 +38,20 @@ private func main()
 	}
 	catch let err as NSError
 	{
-		print("Error \(err.code) in \(err.domain) : \(err.localizedDescription)", terminator: "", toStream: &standardError)
+		print("Error \(err.code) in \(err.domain) : \(err.localizedDescription)", terminator: "", to: &standardError)
 		
 		if let reason = err.localizedFailureReason
 		{
-			print(" : \(reason)", terminator: "", toStream: &standardError)
+			print(" : \(reason)", terminator: "", to: &standardError)
 		}
 		
-		print("", toStream: &standardError)
+		print("", to: &standardError)
 	}
 	
 	if !good { exit(1) }
 }
 
-private func filter_identity(identity: KeychainIdentity) throws -> Bool
+private func filter_identity(_ identity: KeychainIdentity) throws -> Bool
 {
 	if let certificate = try? identity.getCertificate()
 	{
@@ -91,7 +91,7 @@ private func filter_identity(identity: KeychainIdentity) throws -> Bool
 }
 
 
-private func export_identities(identities: [KeychainIdentity]) throws -> NSData
+private func export_identities(_ identities: [KeychainIdentity]) throws -> Data
 {
 	for identity in identities
 	{
@@ -104,21 +104,21 @@ private func export_identities(identities: [KeychainIdentity]) throws -> NSData
 	return try export_identities(identities.map { $0.Ref })
 }
 
-private func export_identities(identities: [SecIdentity]) throws -> NSData
+private func export_identities(_ identities: [SecIdentity]) throws -> Data
 {
 	let identitiesArray = identities as NSArray
-	let exportFlags = SecItemImportExportFlags.PemArmour
-	let unmanagedPassword = Unmanaged<AnyObject>.passRetained(password)
-	let unmanagedAlertTitle = Unmanaged<CFString>.passRetained("dummy alert title")
-	let unmanagedAlertPrompt = Unmanaged<CFString>.passRetained("dummy alert prompt")
+	let exportFlags = SecItemImportExportFlags.pemArmour
+	let unmanagedPassword = Unmanaged<AnyObject>.passRetained(password as AnyObject)
+	let unmanagedAlertTitle = Unmanaged<CFString>.passRetained("dummy alert title" as CFString)
+	let unmanagedAlertPrompt = Unmanaged<CFString>.passRetained("dummy alert prompt" as CFString)
 	
 	var parameters = SecItemImportExportKeyParameters(version: UInt32(SEC_KEY_IMPORT_EXPORT_PARAMS_VERSION),
-	                                                  flags: .NoAccessControl, passphrase: unmanagedPassword,
+	                                                  flags: .noAccessControl, passphrase: unmanagedPassword,
 	                                                  alertTitle: unmanagedAlertTitle, alertPrompt: unmanagedAlertPrompt,
 	                                                  accessRef: nil, keyUsage: nil, keyAttributes: nil)
 	
 	var dataOpt: CFData? = nil
-	let err = withUnsafeMutablePointer(&dataOpt) { SecItemExport(identitiesArray, .FormatPKCS12, exportFlags, &parameters, UnsafeMutablePointer($0)) }
+	let err = withUnsafeMutablePointer(to: &dataOpt) { SecItemExport(identitiesArray, .formatPKCS12, exportFlags, &parameters, UnsafeMutablePointer($0)) }
 	
 	if err != errSecSuccess {
 		throw make_sec_error(err, "Cannot export identities")
@@ -126,21 +126,21 @@ private func export_identities(identities: [SecIdentity]) throws -> NSData
 	
 	let data = dataOpt!
 	
-	return data as NSData;
+	return data as Data;
 }
 
-func write_export_file(path: String, data: NSData) throws
+func write_export_file(_ path: String, data: Data) throws
 {
-	try data.writeToFile(path, options: .DataWritingAtomic)
+	try data.write(to: URL(fileURLWithPath: path), options: .atomic)
 }
 
-func make_sec_error(err: OSStatus, _ message: String) -> NSError
+func make_sec_error(_ err: OSStatus, _ message: String) -> NSError
 {
 	var userInfo: [NSObject : AnyObject] = [
-		kCFErrorLocalizedDescriptionKey: message,
+		kCFErrorLocalizedDescriptionKey: message as AnyObject,
 	]
 	
-	if let reason = SecCopyErrorMessageString(err, UnsafeMutablePointer<Void>(bitPattern: 0))
+	if let reason = SecCopyErrorMessageString(err, UnsafeMutableRawPointer(bitPattern: 0))
 	{
 		userInfo[kCFErrorLocalizedFailureReasonKey] = reason
 	}
@@ -150,26 +150,26 @@ func make_sec_error(err: OSStatus, _ message: String) -> NSError
 	return error
 }
 
-func make_error(err: CFError) -> NSError
+func make_error(_ err: CFError) -> NSError
 {
 	let domain = CFErrorGetDomain(err) as String
 	let code = CFErrorGetCode(err)
 	let userInfoNS = CFErrorCopyUserInfo(err) as NSDictionary
-	let userInfo = userInfoNS as! [NSObject : AnyObject]
+	let userInfo = userInfoNS as [NSObject : AnyObject]
 	
 	let error = NSError(domain: domain as String, code: code, userInfo: userInfo)
 	
 	return error
 }
 
-enum ExportError : ErrorType
+enum ExportError : Error
 {
-	case UnsupportedKeychainItemType
+	case unsupportedKeychainItemType
 }
 
 private func parse_args()
 {
-	program_name = Process.arguments[0]
+	program_name = CommandLine.arguments[0]
 	
 	var longopts = [option]()
 	
@@ -182,11 +182,13 @@ private func parse_args()
 
 	while true
 	{
-		let c = getopt_long(Process.argc, Process.unsafeArgv, "k:o:p:t:u:", longopts, nil)
+		let c = getopt_long(CommandLine.argc, CommandLine.unsafeArgv, "k:o:p:t:u:", longopts, nil)
 		
 		if c < 0 { break }
 		
-		switch String(UnicodeScalar(UInt32(c))) {
+		let char = Character(UnicodeScalar(UInt32(c))!)
+		
+		switch String(char) {
 		case "k":
 			keychain_name = fetch_required_arg()
 			
@@ -213,7 +215,7 @@ private func parse_args()
 	if teamid.isEmpty && username.isEmpty { usage(); }
 }
 
-private func make_option_with_arg(name: String, letter: String) -> option
+private func make_option_with_arg(_ name: String, letter: String) -> option
 {
 	let value = Int32(letter.unicodeScalars.first!.value)
 	
@@ -222,13 +224,13 @@ private func make_option_with_arg(name: String, letter: String) -> option
 
 private func fetch_required_arg() -> String
 {
-	let arg = String.fromCString(UnsafePointer<CChar>(optarg))
+	let arg = String(cString: UnsafePointer<CChar>(optarg))
 	
-	if arg == nil { usage(); }
+	//if arg == nil { usage(); }
+	//
+	//// Since usage() doesn't return, then if we got here it means that arg isn't nil.
 	
-	// Since usage() doesn't return, then if we got here it means that arg isn't nil.
-	
-	return arg!
+	return arg
 }
 
 private func usage()
@@ -244,9 +246,9 @@ private func usage()
 	exit(2)
 }
 
-public struct StderrOutputStream: OutputStreamType {
+public struct StderrOutputStream: TextOutputStream {
 	public static let stream = StderrOutputStream()
-	public func write(string: String) {fputs(string, stderr)}
+	public func write(_ string: String) {fputs(string, stderr)}
 }
 
 public var standardError = StderrOutputStream.stream

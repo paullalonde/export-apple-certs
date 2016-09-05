@@ -12,28 +12,28 @@ import Foundation
 
 enum KeychainSearchClass
 {
-	case InternetPassword
-	case GenericPassword
-	case Certificate
-	case Key
-	case Identity
+	case internetPassword
+	case genericPassword
+	case certificate
+	case key
+	case identity
 }
 
 enum KeychainSearchResult
 {
-	case Certificate(KeychainCertificate)
-	case Key(KeychainKey)
-	case Identity(KeychainIdentity)
+	case certificate(KeychainCertificate)
+	case key(KeychainKey)
+	case identity(KeychainIdentity)
 }
 
 struct Keychain
 {
-	private let _keychain: SecKeychain
+	fileprivate let _keychain: SecKeychain
 	
 	init(path: String) throws
 	{
-		var keychain: SecKeychainRef?
-		let err = withUnsafeMutablePointer(&keychain) { SecKeychainOpen(path, UnsafeMutablePointer($0)) }
+		var keychain: SecKeychain?
+		let err = withUnsafeMutablePointer(to: &keychain) { SecKeychainOpen(path, UnsafeMutablePointer($0)) }
 		
 		if err != errSecSuccess {
 			throw make_sec_error(err, "Cannot open keychain '\(path)'")
@@ -42,52 +42,52 @@ struct Keychain
 		_keychain = keychain!
 	}
 	
-	func SearchIdentities(maxResults maxResults: UInt? = 1) throws -> [KeychainIdentity]
+	func SearchIdentities(maxResults: UInt? = 1) throws -> [KeychainIdentity]
 	{
-		let results = try Search(self, searchClass: .Identity, maxResults: maxResults)
+		let results = try Search(self, searchClass: .identity, maxResults: maxResults)
 		
 		return try results.map {
 			switch ($0)
 			{
-			case .Identity(let identity):
+			case .identity(let identity):
 				return identity
 			default:
-				throw ExportError.UnsupportedKeychainItemType
+				throw ExportError.unsupportedKeychainItemType
 			}
 		}
 	}
 	
-	func SearchCertificates(maxResults maxResults: UInt? = 1) throws -> [KeychainCertificate]
+	func SearchCertificates(maxResults: UInt? = 1) throws -> [KeychainCertificate]
 	{
-		let results = try Search(self, searchClass: .Certificate, maxResults: maxResults)
+		let results = try Search(self, searchClass: .certificate, maxResults: maxResults)
 		
 		return try results.map {
 			switch ($0)
 			{
-			case .Certificate(let certificate):
+			case .certificate(let certificate):
 				return certificate
 			default:
-				throw ExportError.UnsupportedKeychainItemType
+				throw ExportError.unsupportedKeychainItemType
 			}
 		}
 	}
 	
-	func SearchKeys(maxResults maxResults: UInt? = 1) throws -> [KeychainKey]
+	func SearchKeys(maxResults: UInt? = 1) throws -> [KeychainKey]
 	{
-		let results = try Search(self, searchClass: .Key, maxResults: maxResults)
+		let results = try Search(self, searchClass: .key, maxResults: maxResults)
 		
 		return try results.map {
 			switch ($0)
 			{
-			case .Key(let key):
+			case .key(let key):
 				return key
 			default:
-				throw ExportError.UnsupportedKeychainItemType
+				throw ExportError.unsupportedKeychainItemType
 			}
 		}
 	}
 	
-	private func Search(keychain: Keychain?, searchClass: KeychainSearchClass?, maxResults: UInt?) throws -> [KeychainSearchResult]
+	fileprivate func Search(_ keychain: Keychain?, searchClass: KeychainSearchClass?, maxResults: UInt?) throws -> [KeychainSearchResult]
 	{
 		var query: [String: AnyObject] = [
 			kSecReturnRef as String: kCFBooleanTrue,
@@ -110,15 +110,15 @@ struct Keychain
 			
 			switch itemClass
 			{
-			case .InternetPassword:
+			case .internetPassword:
 				classValue = kSecClassInternetPassword
-			case .GenericPassword:
+			case .genericPassword:
 				classValue = kSecClassGenericPassword
-			case .Certificate:
+			case .certificate:
 				classValue = kSecClassCertificate
-			case .Key:
+			case .key:
 				classValue = kSecClassKey
-			case .Identity:
+			case .identity:
 				classValue = kSecClassIdentity
 			}
 			
@@ -148,7 +148,7 @@ struct Keychain
 		// Perform the search.
 		
 		var foundItemsAny: AnyObject?
-		let err = withUnsafeMutablePointer(&foundItemsAny) { SecItemCopyMatching(query, UnsafeMutablePointer($0)) }
+		let err = withUnsafeMutablePointer(to: &foundItemsAny) { SecItemCopyMatching(query as CFDictionary, UnsafeMutablePointer($0)) }
 		
 		if err != errSecSuccess {
 			throw make_sec_error(err, "Cannot query keychain items")
@@ -163,13 +163,13 @@ struct Keychain
 				switch (foundItemType)
 				{
 				case SecCertificateGetTypeID():
-					value = KeychainSearchResult.Certificate(KeychainCertificate(foundItem as! SecCertificate))
+					value = KeychainSearchResult.certificate(KeychainCertificate(foundItem as! SecCertificate))
 				case SecKeyGetTypeID():
-					value = KeychainSearchResult.Key(KeychainKey(foundItem as! SecKey))
+					value = KeychainSearchResult.key(KeychainKey(foundItem as! SecKey))
 				case SecIdentityGetTypeID():
-					value = KeychainSearchResult.Identity(KeychainIdentity(foundItem as! SecIdentity))
+					value = KeychainSearchResult.identity(KeychainIdentity(foundItem as! SecIdentity))
 				default:
-					throw ExportError.UnsupportedKeychainItemType
+					throw ExportError.unsupportedKeychainItemType
 				}
 				
 				return value

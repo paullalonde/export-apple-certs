@@ -11,7 +11,7 @@ import Foundation
 
 struct KeychainIdentity
 {
-	private let _identity: SecIdentity
+	fileprivate let _identity: SecIdentity
 	
 	init(_ identity: SecIdentity)
 	{
@@ -27,7 +27,7 @@ struct KeychainIdentity
 	func getCertificate() throws -> KeychainCertificate
 	{
 		var certificate: SecCertificate?
-		let err = withUnsafeMutablePointer(&certificate) { SecIdentityCopyCertificate(_identity, UnsafeMutablePointer($0)) }
+		let err = withUnsafeMutablePointer(to: &certificate) { SecIdentityCopyCertificate(_identity, UnsafeMutablePointer($0)) }
 		
 		if err != errSecSuccess {
 			throw make_sec_error(err, "Cannot retrieve identity's certificate")
@@ -40,7 +40,7 @@ struct KeychainIdentity
 	func getKey() throws -> KeychainKey
 	{
 		var privateKey: SecKey?
-		let err = withUnsafeMutablePointer(&privateKey) { SecIdentityCopyPrivateKey(_identity, UnsafeMutablePointer($0)) }
+		let err = withUnsafeMutablePointer(to: &privateKey) { SecIdentityCopyPrivateKey(_identity, UnsafeMutablePointer($0)) }
 		
 		if err != errSecSuccess {
 			throw make_sec_error(err, "Cannot retrieve identity's private key")

@@ -12,6 +12,8 @@
 		6A3B72551D7D10EE00F11423 /* KeychainCertificate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3B72541D7D10EE00F11423 /* KeychainCertificate.swift */; };
 		6A3B72571D7D130000F11423 /* KeychainKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3B72561D7D130000F11423 /* KeychainKey.swift */; };
 		6A50948B1D21879100C61492 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A50948A1D21879100C61492 /* main.swift */; };
+		6A71578E1D7DD05700CB6189 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A71578D1D7DD05700CB6189 /* Security.framework */; };
+		6A7157901D7DD07300CB6189 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A71578F1D7DD07300CB6189 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -35,6 +37,8 @@
 		6A50948A1D21879100C61492 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		6A5094911D2187C900C61492 /* export-apple-certs-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "export-apple-certs-Bridging-Header.h"; sourceTree = "<group>"; };
 		6A5094961D2AB8C700C61492 /* install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = install.sh; sourceTree = "<group>"; };
+		6A71578D1D7DD05700CB6189 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		6A71578F1D7DD07300CB6189 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,6 +46,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6A7157901D7DD07300CB6189 /* Foundation.framework in Frameworks */,
+				6A71578E1D7DD05700CB6189 /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -54,6 +60,7 @@
 				6A5094961D2AB8C700C61492 /* install.sh */,
 				6A5094891D21879100C61492 /* export-apple-certs */,
 				6A5094881D21879100C61492 /* Products */,
+				6A71578C1D7DD05700CB6189 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -76,6 +83,15 @@
 				6A3B72561D7D130000F11423 /* KeychainKey.swift */,
 			);
 			path = "export-apple-certs";
+			sourceTree = "<group>";
+		};
+		6A71578C1D7DD05700CB6189 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6A71578F1D7DD07300CB6189 /* Foundation.framework */,
+				6A71578D1D7DD05700CB6189 /* Security.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -105,11 +121,13 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0730;
-				LastUpgradeCheck = 0730;
+				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = "Paul Lalonde enrg.";
 				TargetAttributes = {
 					6A5094861D21879100C61492 = {
 						CreatedOnToolsVersion = 7.3.1;
+						DevelopmentTeam = 5GKLRH676A;
+						LastSwiftMigration = 0800;
 					};
 				};
 			};
@@ -160,8 +178,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "Developer ID Application: Paul Lalonde (5GKLRH676A)";
@@ -205,8 +225,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "Developer ID Application: Paul Lalonde (5GKLRH676A)";
@@ -225,6 +247,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 			};
 			name = Release;
 		};
@@ -232,12 +255,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = 5GKLRH676A;
 				INSTALL_GROUP = admin;
 				INSTALL_OWNER = root;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "export-apple-certs/export-apple-certs-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -245,11 +270,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				DEVELOPMENT_TEAM = 5GKLRH676A;
 				INSTALL_GROUP = admin;
 				INSTALL_OWNER = root;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "export-apple-certs/export-apple-certs-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
