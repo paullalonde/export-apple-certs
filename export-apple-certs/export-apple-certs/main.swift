@@ -237,10 +237,10 @@ private func usage()
 {
 	print("Usage: export-apple-certs <options>")
 	print("Options:")
-	print(" -k, --keychain FILE    The path to the keychain to export from.")
-	print(" -o, --output FILE      The path to the file into which to export the certificates.")
+	print(" -k, --keychain PATH    The path to the keychain to export from.")
+	print(" -o, --output PATH      The path to the file into which to export the certificates.")
 	print(" -p, --password PASSWD  The password with which to protect the exported certificate file.")
-	print(" -t, --teamid STRING    Filters the exported certificates according to the given iTunes Connect Team ID.")
+	print(" -t, --teamid TEAMID    Filters the exported certificates according to the given iTunes Connect Team ID.")
 	print(" -u, --user USER        Filters the exported certificates according to the given iTunes Connect user name.")
 	
 	exit(2)
