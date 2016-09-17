@@ -58,4 +58,4 @@ echo "Creating keychain \"$KEYCHAIN_PATH\" ..."
 security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" || bail "Cannot create destination keychain"
 
 echo "Importing certificates into keychain \"$KEYCHAIN_PATH\" ..."
-security import "$CERTS_FILE" -k "$KEYCHAIN_PATH" -f pkcs12 -P "$CERTS_PASSWORD" || bail "Cannot import certificates into keychain"
+security import "$CERTS_FILE" -k "$KEYCHAIN_PATH" -f pkcs12 -P "$CERTS_PASSWORD" -T '/usr/bin/codesign' || bail "Cannot import certificates into keychain"
