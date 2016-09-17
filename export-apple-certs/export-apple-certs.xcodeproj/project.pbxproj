@@ -40,6 +40,7 @@
 		6A71578D1D7DD05700CB6189 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		6A71578F1D7DD07300CB6189 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		6A7157931D7DD90200CB6189 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		6A8891A41D8CC53400EEF84D /* import-apple-certs.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "import-apple-certs.sh"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +59,7 @@
 		6A50947E1D21879100C61492 = {
 			isa = PBXGroup;
 			children = (
+				6A8891A41D8CC53400EEF84D /* import-apple-certs.sh */,
 				6A7157931D7DD90200CB6189 /* README.md */,
 				6A5094961D2AB8C700C61492 /* install.sh */,
 				6A5094891D21879100C61492 /* export-apple-certs */,
