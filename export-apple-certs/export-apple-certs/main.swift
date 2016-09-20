@@ -11,13 +11,31 @@ import Foundation
 import Security
 
 
+enum CertificateTypeFilter
+{
+	case all
+	case iosAppStore
+	case macAppStore
+	case developerId
+}
+
+enum EnvironmentFilter
+{
+	case all
+	case development
+	case production
+}
 
 var program_name = ""
-var keychain_name = ""
-var output_path = ""
-var password = ""
+var source_keychain_path = ""
+var force_destination = false
+var dest_keychain_path = ""
+var dest_keychain_password = ""
 var teamid = ""
 var username = ""
+var certificateTypeFilter = CertificateTypeFilter.all
+var environmentFilter = EnvironmentFilter.all
+
 
 private func main()
 {
@@ -27,12 +45,22 @@ private func main()
 	{
 		parse_args()
 		
-		let keychain = try Keychain(path: keychain_name);
-		let identities = try keychain.SearchIdentities(maxResults: nil)
-		let filteredIdentities = try identities.filter { try filter_identity(identity: $0) }
-		let exportedData = try export_identities(identities: filteredIdentities)
+		let sourceKeychain = try Keychain.Open(path: source_keychain_path)
 		
-		try write_export_file(path: output_path, data: exportedData)
+		if force_destination
+		{
+			if let existingKeychain = try? Keychain.Open(path: dest_keychain_path)
+			{
+				try? existingKeychain.Delete()
+			}
+		}
+		
+		let destKeychain = try Keychain.Create(path: dest_keychain_path, password: dest_keychain_password)
+		
+		let identities = try sourceKeychain.SearchIdentities(maxResults: nil)
+		let filteredIdentities = try identities.filter { try filter_identity(identity: $0) }
+		
+		try copy_identities(identities: filteredIdentities, from: sourceKeychain, to: destKeychain)
 		
 		good = true
 	}
@@ -55,43 +83,97 @@ private func filter_identity(identity: KeychainIdentity) throws -> Bool
 {
 	if let certificate = try? identity.getCertificate()
 	{
+		print("Filtering cert \(certificate.SubjectSummary)")
+			
 		if (try? identity.getKey()) != nil
 		{
-			if let subjectName = try certificate.getSubjectName()
+			if try !filter_certificate_type(certificate: certificate, certificateTypeFilter: certificateTypeFilter)
 			{
-				var goodOrganization = true
-				var goodOrganizationalUnit = true
-				
-				if !username.isEmpty
-				{
-					goodOrganization = false
-					
-					if let organization = subjectName.OrganizationName
-					{
-						goodOrganization = (organization == username)
-					}
-				}
-				
-				if !teamid.isEmpty
-				{
-					goodOrganizationalUnit = false
-					
-					if let organizationalUnit = subjectName.OrganizationalUnitName
-					{
-						goodOrganizationalUnit = (organizationalUnit == teamid)
-					}
-				}
-				
-				return goodOrganization && goodOrganizationalUnit
+				return false
 			}
+			
+			if try !filter_environment(certificate: certificate, environmentFilter: environmentFilter)
+			{
+				return false
+			}
+			
+			if try !filter_organization(certificate: certificate, orgName: username)
+			{
+				return false
+			}
+			
+			if try !filter_orgunit(certificate: certificate, orgUnit: teamid)
+			{
+				return false
+			}
+			
+			return true
 		}
 	}
 	
 	return false
 }
 
+private func filter_certificate_type(certificate: KeychainCertificate, certificateTypeFilter: CertificateTypeFilter) throws -> Bool
+{
+	switch certificateTypeFilter {
+	case .iosAppStore:
+		return try certificate.getIsAppStore()
+		
+	case .macAppStore:
+		return try certificate.getIsMacAppStore()
+		
+	case .developerId:
+		return try certificate.getIsNonMacAppStore()
+		
+	default:
+		return true
+	}
+}
 
-private func export_identities(identities: [KeychainIdentity]) throws -> Data
+private func filter_environment(certificate: KeychainCertificate, environmentFilter: EnvironmentFilter) throws -> Bool
+{
+	switch environmentFilter {
+	case .development:
+		return try certificate.getIsDevelopment()
+	case .production:
+		return try certificate.getIsProduction()
+	case .all:
+		return true
+	}
+}
+
+private func filter_organization(certificate: KeychainCertificate, orgName: String) throws -> Bool
+{
+	if orgName.isEmpty { return true }
+	
+	if let subjectName = try certificate.getSubjectName()
+	{
+		if let organization = subjectName.OrganizationName
+		{
+			return (organization == orgName)
+		}
+	}
+	
+	return false
+}
+
+private func filter_orgunit(certificate: KeychainCertificate, orgUnit: String) throws -> Bool
+{
+	if orgUnit.isEmpty { return true }
+	
+	if let subjectName = try certificate.getSubjectName()
+	{
+		if let organizationalUnit = subjectName.OrganizationalUnitName
+		{
+			return (organizationalUnit == orgUnit)
+		}
+	}
+	
+	return false
+}
+
+private func copy_identities(identities: [KeychainIdentity], from: Keychain, to: Keychain) throws
 {
 	for identity in identities
 	{
@@ -99,40 +181,14 @@ private func export_identities(identities: [KeychainIdentity]) throws -> Data
 		let summary = certificate.SubjectSummary
 		
 		print("Exporting certificate : \(summary)")
+		
+		let password = "bachibouzouk"
+		let data = try from.Export(identity: identity, password: password)
+		
+		_ = try to.Import(data: data, password: password)
 	}
-	
-	return try export_identities(identities: identities.map { $0.Ref })
 }
 
-private func export_identities(identities: [SecIdentity]) throws -> Data
-{
-	let identitiesArray = identities as NSArray
-	let exportFlags = SecItemImportExportFlags.pemArmour
-	let unmanagedPassword = Unmanaged<AnyObject>.passRetained(password as AnyObject)
-	let unmanagedAlertTitle = Unmanaged<CFString>.passRetained("dummy alert title" as CFString)
-	let unmanagedAlertPrompt = Unmanaged<CFString>.passRetained("dummy alert prompt" as CFString)
-	
-	var parameters = SecItemImportExportKeyParameters(version: UInt32(SEC_KEY_IMPORT_EXPORT_PARAMS_VERSION),
-	                                                  flags: .noAccessControl, passphrase: unmanagedPassword,
-	                                                  alertTitle: unmanagedAlertTitle, alertPrompt: unmanagedAlertPrompt,
-	                                                  accessRef: nil, keyUsage: nil, keyAttributes: nil)
-	
-	var dataOpt: CFData? = nil
-	let err = withUnsafeMutablePointer(to: &dataOpt) { SecItemExport(identitiesArray, .formatPKCS12, exportFlags, &parameters, UnsafeMutablePointer($0)) }
-	
-	if err != errSecSuccess {
-		throw make_sec_error(err, "Cannot export identities")
-	}
-	
-	let data = dataOpt!
-	
-	return data as Data;
-}
-
-func write_export_file(path: String, data: Data) throws
-{
-	try data.write(to: URL(fileURLWithPath: path), options: .atomic)
-}
 
 func make_sec_error(_ err: OSStatus, _ message: String) -> NSError
 {
@@ -173,6 +229,9 @@ private func parse_args()
 	
 	var longopts = [option]()
 	
+	longopts.append(make_option_with_arg("cert",     letter: "c"))
+	longopts.append(make_option_with_arg("env",      letter: "e"))
+	longopts.append(make_option_no_arg  ("force",    letter: "f"))
 	longopts.append(make_option_with_arg("keychain", letter: "k"))
 	longopts.append(make_option_with_arg("output",   letter: "o"))
 	longopts.append(make_option_with_arg("password", letter: "p"))
@@ -182,21 +241,50 @@ private func parse_args()
 
 	while true
 	{
-		let c = getopt_long(CommandLine.argc, CommandLine.unsafeArgv, "k:o:p:t:u:", longopts, nil)
+		let c = getopt_long(CommandLine.argc, CommandLine.unsafeArgv, "c:e:fk:o:p:t:u:", longopts, nil)
 		
 		if c < 0 { break }
 		
 		let char = Character(UnicodeScalar(UInt32(c))!)
 		
 		switch String(char) {
+		case "c":
+			switch fetch_required_arg() {
+			case "all":
+				certificateTypeFilter = .all
+			case "ios":
+				certificateTypeFilter = .iosAppStore
+			case "mac":
+				certificateTypeFilter = .macAppStore
+			case "devid":
+				certificateTypeFilter = .developerId
+			default:
+				usage()
+			}
+			
+		case "e":
+			switch fetch_required_arg() {
+			case "all":
+				environmentFilter = .all
+			case "dev":
+				environmentFilter = .development
+			case "prod":
+				environmentFilter = .production
+			default:
+				usage()
+			}
+			
+		case "f":
+			force_destination = true
+			
 		case "k":
-			keychain_name = fetch_required_arg()
+			source_keychain_path = fetch_required_arg()
 			
 		case "o":
-			output_path = fetch_required_arg()
+			dest_keychain_path = fetch_required_arg()
 			
 		case "p":
-			password = fetch_required_arg()
+			dest_keychain_password = fetch_required_arg()
 			
 		case "t":
 			teamid = fetch_required_arg()
@@ -209,10 +297,17 @@ private func parse_args()
 		}
 	}
 	
-	if keychain_name.isEmpty { usage(); }
-	if output_path.isEmpty { usage(); }
-	if password.isEmpty { usage(); }
+	if source_keychain_path.isEmpty { usage(); }
+	if dest_keychain_path.isEmpty { usage(); }
+	if dest_keychain_password.isEmpty { usage(); }
 	if teamid.isEmpty && username.isEmpty { usage(); }
+}
+
+private func make_option_no_arg(_ name: String, letter: String) -> option
+{
+	let value = Int32(letter.unicodeScalars.first!.value)
+	
+	return option(name: name, has_arg: no_argument, flag: nil, val: value)
 }
 
 private func make_option_with_arg(_ name: String, letter: String) -> option
@@ -237,9 +332,19 @@ private func usage()
 {
 	print("Usage: export-apple-certs <options>")
 	print("Options:")
-	print(" -k, --keychain PATH    The path to the keychain to export from.")
-	print(" -o, --output PATH      The path to the file into which to export the certificates.")
-	print(" -p, --password PASSWD  The password with which to protect the exported certificate file.")
+	print(" -c, --cert TYPE        The type of certificate. Allowed values are :")
+	print("                          - all      All certificates types (the default).")
+	print("                          - ios      Code-signing certificates for iOS, tvOS and watchOS applications.")
+	print("                          - mac      Code-signing certificates for Mac App Store applications.")
+	print("                          - devid    Code-signing certificates for macOS applications.")
+	print(" -e, --env ENV          The environment. Allowed values are :")
+	print("                          - all      All environments (the default).")
+	print("                          - dev      Developement environment.")
+	print("                          - prod     Production environment.")
+	print(" -f                     Remove any existing destination keychain.")
+	print(" -k, --keychain PATH    The path to the source keychain.")
+	print(" -o, --output PATH      The path to the destination keychain.")
+	print(" -p, --password PASSWD  The password with which to protect the destination keychain.")
 	print(" -t, --teamid TEAMID    Filters the exported certificates according to the given iTunes Connect Team ID.")
 	print(" -u, --user USER        Filters the exported certificates according to the given iTunes Connect user name.")
 	

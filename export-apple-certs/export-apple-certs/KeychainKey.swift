@@ -17,4 +17,15 @@ struct KeychainKey
 	{
 		_key = key;
 	}
+	
+	var ItemRef: SecKeychainItem
+	{
+		get { return unsafeBitCast(_key, to: SecKeychainItem.self) }
+	}
+	
+	//func ReadAttributes()
+	//{
+	//	let attrs = SecKeyCopyAttributes(_key)
+	//
+	//}
 }

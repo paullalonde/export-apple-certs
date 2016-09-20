@@ -13,9 +13,22 @@ struct KeychainCertificate
 {
 	fileprivate let _certificate: SecCertificate
 	
+	fileprivate static let IOSAppDevelopmentOID         = "1.2.840.113635.100.6.1.2"
+	fileprivate static let AppStoreOID                  = "1.2.840.113635.100.6.1.4"
+	fileprivate static let MacDevelopmentOID            = "1.2.840.113635.100.6.1.12"
+	fileprivate static let MacAppDistributionOID        = "1.2.840.113635.100.6.1.7"
+	fileprivate static let MacInstallerDistributionOID  = "1.2.840.113635.100.6.1.8"
+	fileprivate static let DeveloperIdOID               = "1.2.840.113635.100.6.1.13"
+	fileprivate static let DeveloperIdInstallerOID      = "1.2.840.113635.100.6.1.14"
+	
 	init(certificate: SecCertificate)
 	{
 		_certificate = certificate;
+	}
+	
+	var ItemRef: SecKeychainItem
+	{
+		get { return unsafeBitCast(_certificate, to: SecKeychainItem.self) }
 	}
 	
 	var SubjectSummary : String
@@ -25,7 +38,7 @@ struct KeychainCertificate
 		}
 	}
 	
-	// note: this should be a computed property, but they can't throw (yet)
+	// TODO: this should be a computed property, but they can't throw (yet)
 	func getSubjectName() throws -> KeychainCertificateSubjectName?
 	{
 		if let property = try ReadProperty(key: kSecOIDX509V1SubjectName)
@@ -36,11 +49,92 @@ struct KeychainCertificate
 		return nil
 	}
 	
+	// TODO: this should be a computed property, but they can't throw (yet)
+	func getIsDevelopment() throws -> Bool
+	{
+		return try (getIsAppStoreDevelopment() ||
+					getIsMacAppStoreDevelopment())
+	}
+	
+	// TODO: this should be a computed property, but they can't throw (yet)
+	func getIsProduction() throws -> Bool
+	{
+		return try (getIsAppStoreDistribution()     ||
+					getIsMacAppStoreDistribution()  ||
+					getIsMacInstallerDistribution() ||
+					getIsDeveloperId()              ||
+					getIsDeveloperIdInstaller())
+	}
+	
+	// TODO: this should be a computed property, but they can't throw (yet)
+	func getIsAppStore() throws -> Bool
+	{
+		return try (getIsAppStoreDevelopment() ||
+					getIsAppStoreDistribution())
+	}
+	
+	// TODO: this should be a computed property, but they can't throw (yet)
+	func getIsMacAppStore() throws -> Bool
+	{
+		return try (getIsMacAppStoreDevelopment()  ||
+					getIsMacAppStoreDistribution() ||
+					getIsMacInstallerDistribution())
+	}
+	
+	// TODO: this should be a computed property, but they can't throw (yet)
+	func getIsNonMacAppStore() throws -> Bool
+	{
+		return try (getIsDeveloperId() ||
+					getIsDeveloperIdInstaller())
+	}
+	
+	// TODO: this should be a computed property, but they can't throw (yet)
+	func getIsAppStoreDevelopment() throws -> Bool
+	{
+		return try ReadProperty(key: KeychainCertificate.IOSAppDevelopmentOID as CFString) != nil
+	}
+	
+	// TODO: this should be a computed property, but they can't throw (yet)
+	func getIsAppStoreDistribution() throws -> Bool
+	{
+		return try ReadProperty(key: KeychainCertificate.AppStoreOID as CFString) != nil
+	}
+	
+	// TODO: this should be a computed property, but they can't throw (yet)
+	func getIsMacAppStoreDevelopment() throws -> Bool
+	{
+		return try ReadProperty(key: KeychainCertificate.MacDevelopmentOID as CFString) != nil
+	}
+	
+	// TODO: this should be a computed property, but they can't throw (yet)
+	func getIsMacAppStoreDistribution() throws -> Bool
+	{
+		return try ReadProperty(key: KeychainCertificate.MacAppDistributionOID as CFString) != nil
+	}
+	
+	// TODO: this should be a computed property, but they can't throw (yet)
+	func getIsMacInstallerDistribution() throws -> Bool
+	{
+		return try ReadProperty(key: KeychainCertificate.MacInstallerDistributionOID as CFString) != nil
+	}
+	
+	// TODO: this should be a computed property, but they can't throw (yet)
+	func getIsDeveloperId() throws -> Bool
+	{
+		return try ReadProperty(key: KeychainCertificate.DeveloperIdOID as CFString) != nil
+	}
+	
+	// TODO: this should be a computed property, but they can't throw (yet)
+	func getIsDeveloperIdInstaller() throws -> Bool
+	{
+		return try ReadProperty(key: KeychainCertificate.DeveloperIdInstallerOID as CFString) != nil
+	}
+	
 	fileprivate func ReadProperty(key: CFString) throws -> KeychainCertificateProperty?
 	{
 		let keys: [CFString] = [ key ]
 		var unmanagedErrorOpt: Unmanaged<CFError>?
-		let certValuesAnyOpt = withUnsafeMutablePointer(to: &unmanagedErrorOpt) { SecCertificateCopyValues(_certificate, keys as CFArray?, UnsafeMutablePointer($0)) }
+		let certValuesAnyOpt = withUnsafeMutablePointer(to: &unmanagedErrorOpt) { SecCertificateCopyValues(_certificate, keys as CFArray?, $0) }
 		
 		if let unmanagedError = unmanagedErrorOpt
 		{

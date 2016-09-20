@@ -23,11 +23,16 @@ struct KeychainIdentity
 		get { return _identity }
 	}
 	
-	// note: this should be a computed property, but they can't throw (yet)
+	var ItemRef: SecKeychainItem
+	{
+		get { return unsafeBitCast(_identity, to: SecKeychainItem.self) }
+	}
+	
+	// TODO: this should be a computed property, but they can't throw (yet)
 	func getCertificate() throws -> KeychainCertificate
 	{
 		var certificate: SecCertificate?
-		let err = withUnsafeMutablePointer(to: &certificate) { SecIdentityCopyCertificate(_identity, UnsafeMutablePointer($0)) }
+		let err = withUnsafeMutablePointer(to: &certificate) { SecIdentityCopyCertificate(_identity, $0) }
 		
 		if err != errSecSuccess {
 			throw make_sec_error(err, "Cannot retrieve identity's certificate")
@@ -36,11 +41,11 @@ struct KeychainIdentity
 		return KeychainCertificate(certificate: certificate!)
 	}
 	
-	// note: this should be a computed property, but they can't throw (yet)
+	// TODO: this should be a computed property, but they can't throw (yet)
 	func getKey() throws -> KeychainKey
 	{
 		var privateKey: SecKey?
-		let err = withUnsafeMutablePointer(to: &privateKey) { SecIdentityCopyPrivateKey(_identity, UnsafeMutablePointer($0)) }
+		let err = withUnsafeMutablePointer(to: &privateKey) { SecIdentityCopyPrivateKey(_identity, $0) }
 		
 		if err != errSecSuccess {
 			throw make_sec_error(err, "Cannot retrieve identity's private key")
