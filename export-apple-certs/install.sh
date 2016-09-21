@@ -28,18 +28,16 @@ INSTALL_PATH="`$SHOW_SETTINGS_CMD | perl -n -e'/^    INSTALL_PATH = (.+)/ && pri
 SRC_BIN_PATH="$INSTALL_DIR/$PRODUCT_NAME"
 DST_BIN_PATH="$INSTALL_PATH/$PRODUCT_NAME"
 
-#echo DSTROOT = $DSTROOT
-#echo PRODUCT_NAME = $PRODUCT_NAME
-#echo INSTALL_DIR = $INSTALL_DIR
-#echo INSTALL_PATH = $INSTALL_PATH
+#echo "DSTROOT = $DSTROOT"
+#echo "PRODUCT_NAME = $PRODUCT_NAME"
+#echo "INSTALL_DIR = $INSTALL_DIR"
+#echo "INSTALL_PATH = $INSTALL_PATH"
 
 sudo $XCODEBUILD_CMD clean || bail "Could not clean project"
 sudo rm -rf "$DSTROOT"
 sudo $XCODEBUILD_CMD install || bail "Could not install project"
 
-exit
-
 sudo rm -f "$DST_BIN_PATH"
-sudo ditto "$SRC_BIN_PATH" "$DST_BIN_PATH" || bail "Could not copy $SRC_BIN_PATH to $DST_BIN_PATH"
+sudo cp -f -p "$SRC_BIN_PATH" "$DST_BIN_PATH" || bail "Could not copy $SRC_BIN_PATH to $DST_BIN_PATH"
 
 echo "Tool successfully installed to $DST_BIN_PATH"
