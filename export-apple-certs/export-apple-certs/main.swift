@@ -44,23 +44,14 @@ private func main()
 	do
 	{
 		parse_args()
+		delete_keychain()
 		
 		let sourceKeychain = try Keychain.Open(path: source_keychain_path)
-		
-		if force_destination
-		{
-			if let existingKeychain = try? Keychain.Open(path: dest_keychain_path)
-			{
-				try? existingKeychain.Delete()
-			}
-		}
-		
 		let destKeychain = try Keychain.Create(path: dest_keychain_path, password: dest_keychain_password)
-		
 		let identities = try sourceKeychain.SearchIdentities(maxResults: nil)
 		let filteredIdentities = try identities.filter { try filter_identity(identity: $0) }
 		
-		let newIdentities = try filteredIdentities.map { try copy_identity(source: $0, from: sourceKeychain, to: destKeychain) }
+		_ = try filteredIdentities.map { try copy_identity(source: $0, from: sourceKeychain, to: destKeychain) }
 		
 		good = true
 	}
@@ -77,6 +68,17 @@ private func main()
 	}
 	
 	if !good { exit(1) }
+}
+
+private func delete_keychain()
+{
+	if force_destination
+	{
+		if let existingKeychain = try? Keychain.Open(path: dest_keychain_path)
+		{
+			try? existingKeychain.Delete()
+		}
+	}
 }
 
 private func filter_identity(identity: KeychainIdentity) throws -> Bool
@@ -114,7 +116,8 @@ private func filter_identity(identity: KeychainIdentity) throws -> Bool
 
 private func filter_certificate_type(certificate: KeychainCertificate, certificateTypeFilter: CertificateTypeFilter) throws -> Bool
 {
-	switch certificateTypeFilter {
+	switch certificateTypeFilter
+	{
 	case .iosAppStore:
 		return try certificate.getIsAppStore()
 		
@@ -124,18 +127,21 @@ private func filter_certificate_type(certificate: KeychainCertificate, certifica
 	case .developerId:
 		return try certificate.getIsNonMacAppStore()
 		
-	default:
+	case .all:
 		return true
 	}
 }
 
 private func filter_environment(certificate: KeychainCertificate, environmentFilter: EnvironmentFilter) throws -> Bool
 {
-	switch environmentFilter {
+	switch environmentFilter
+	{
 	case .development:
 		return try certificate.getIsDevelopment()
+	
 	case .production:
 		return try certificate.getIsProduction()
+	
 	case .all:
 		return true
 	}
@@ -334,12 +340,12 @@ private func usage()
 {
 	print("Usage: export-apple-certs <options>")
 	print("Options:")
-	print(" -c, --cert TYPE        The type of certificate. Allowed values are :")
+	print(" -c, --cert TYPE        Filters the exported certificates according to their type. Allowed values are :")
 	print("                          - all      All certificates types (the default).")
 	print("                          - ios      Certificates for iOS, tvOS and watchOS applications.")
 	print("                          - mac      Certificates for Mac App Store applications.")
 	print("                          - devid    Certificates for Developer ID applications.")
-	print(" -e, --env ENV          The environment. Allowed values are :")
+	print(" -e, --env ENV          Filters the exported certificates according to the environment. Allowed values are :")
 	print("                          - all      All environments (the default).")
 	print("                          - dev      Development environment.")
 	print("                          - prod     Production environment.")
@@ -347,8 +353,8 @@ private func usage()
 	print(" -k, --keychain PATH    The path to the source keychain.")
 	print(" -o, --output PATH      The path to the destination keychain.")
 	print(" -p, --password PASSWD  The password with which to protect the destination keychain.")
-	print(" -t, --teamid TEAMID    Filters the exported certificates according to the given iTunes Connect Team ID.")
-	print(" -u, --user USER        Filters the exported certificates according to the given iTunes Connect user name.")
+	print(" -t, --teamid TEAMID    Filters the exported certificates according to the given Apple Developer Program (ADP) Team ID.")
+	print(" -u, --user USER        Filters the exported certificates according to the given ADP user name.")
 	
 	exit(2)
 }
