@@ -60,7 +60,7 @@ private func main()
 		let identities = try sourceKeychain.SearchIdentities(maxResults: nil)
 		let filteredIdentities = try identities.filter { try filter_identity(identity: $0) }
 		
-		try copy_identities(identities: filteredIdentities, from: sourceKeychain, to: destKeychain)
+		let newIdentities = try filteredIdentities.map { try copy_identity(source: $0, from: sourceKeychain, to: destKeychain) }
 		
 		good = true
 	}
@@ -83,8 +83,6 @@ private func filter_identity(identity: KeychainIdentity) throws -> Bool
 {
 	if let certificate = try? identity.getCertificate()
 	{
-		print("Filtering cert \(certificate.SubjectSummary)")
-			
 		if (try? identity.getKey()) != nil
 		{
 			if try !filter_certificate_type(certificate: certificate, certificateTypeFilter: certificateTypeFilter)
@@ -173,19 +171,23 @@ private func filter_orgunit(certificate: KeychainCertificate, orgUnit: String) t
 	return false
 }
 
-private func copy_identities(identities: [KeychainIdentity], from: Keychain, to: Keychain) throws
+private func copy_identity(source: KeychainIdentity, from: Keychain, to: Keychain) throws -> KeychainIdentity
 {
-	for identity in identities
-	{
-		let certificate = try identity.getCertificate()
-		let summary = certificate.SubjectSummary
-		
-		print("Exporting certificate : \(summary)")
-		
-		let password = "bachibouzouk"
-		let data = try from.Export(identity: identity, password: password)
-		
-		_ = try to.Import(data: data, password: password)
+	let certificate = try source.getCertificate()
+	let summary = certificate.SubjectSummary
+	
+	print("Exporting : \(summary)")
+	
+	let password = "bachibouzouk"
+	let data = try from.Export(identity: source, password: password)
+	
+	let exported = try to.Import(data: data, password: password)
+	
+	switch exported[0] {
+	case .identity(let newIdentity):
+		return newIdentity
+	default:
+		throw ExportError.unsupportedKeychainItemType
 	}
 }
 
@@ -334,9 +336,9 @@ private func usage()
 	print("Options:")
 	print(" -c, --cert TYPE        The type of certificate. Allowed values are :")
 	print("                          - all      All certificates types (the default).")
-	print("                          - ios      Code-signing certificates for iOS, tvOS and watchOS applications.")
-	print("                          - mac      Code-signing certificates for Mac App Store applications.")
-	print("                          - devid    Code-signing certificates for macOS applications.")
+	print("                          - ios      Certificates for iOS, tvOS and watchOS applications.")
+	print("                          - mac      Certificates for Mac App Store applications.")
+	print("                          - devid    Certificates for Developer ID applications.")
 	print(" -e, --env ENV          The environment. Allowed values are :")
 	print("                          - all      All environments (the default).")
 	print("                          - dev      Developement environment.")
