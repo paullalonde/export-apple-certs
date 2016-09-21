@@ -10,14 +10,14 @@ then exports them to a second keychain.
 The program's arguments are as follows:
 
 - **-c TYPE** The type of certificate. Allowed values are :
--- **all** All certificates types (the default).
--- **ios** Certificates for iOS, tvOS and watchOS applications.
--- **mac** Certificates for Mac App Store applications.
--- **devid** Certificates for Developer ID applications.
+  - **all** All certificates types (the default).
+  - **ios** Certificates for iOS, tvOS and watchOS applications.
+  - **mac** Certificates for Mac App Store applications.
+  - **devid** Certificates for Developer ID applications.
 - **-e ENV** The environment. Allowed values are :
--- **all** All environments (the default).
--- **dev** Developement environment.
--- **prod** Production environment.
+  - **all** All environments (the default).
+  - **dev** Development environment.
+  - **prod** Production environment.
 - **-f** Remove any existing destination keychain.
 - **-k PATH** The path to the source keychain.
 - **-o PATH** The path to the destination keychain.
