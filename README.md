@@ -36,9 +36,6 @@ The program's arguments are as follows:
 	<dt>-f</dt>
 	<dd>Remove any existing destination keychain.</dd>
 	
-	<dt>-f</dt>
-	<dd>Remove any existing destination keychain.</dd>
-	
 	<dt>-k PATH</dt>
 	<dd>The path to the source keychain.</dd>
 	
