@@ -23,7 +23,6 @@ The program's arguments are as follows:
 			<li><strong>devid</strong> Certificates for Developer ID applications.</li>
 		</ul>
 	</dd>
-	
 	<dt>-e ENV</dt>
 	<dd>Filters the exported certificates according to the environment. Allowed values are :
 		<ul>
@@ -32,22 +31,16 @@ The program's arguments are as follows:
 			<li><strong>prod</strong> Production environment.</li>
 		</ul>
 	</dd>
-	
 	<dt>-f</dt>
 	<dd>Remove any existing destination keychain.</dd>
-	
 	<dt>-k PATH</dt>
 	<dd>The path to the source keychain.</dd>
-	
 	<dt>-o PATH</dt>
 	<dd>The path to the destination keychain.</dd>
-	
 	<dt>-p PASSWD</dt>
 	<dd>The password with which to protect the destination keychain.</dd>
-	
 	<dt>-t TEAMID</dt>
 	<dd>Filters the exported certificates according to the given Apple Developer Program (ADP) Team ID.</dd>
-	
 	<dt>-u USER</dt>
 	<dd>Filters the exported certificates according to the given ADP user name.</dd>
 </dl>
